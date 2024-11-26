@@ -20,14 +20,28 @@ class AuthController extends Controller
             return $this->error('Invalide credentials', 401);
         }
 
+        /**
+         * @var \App\Models\User $user
+         */
         $user = User::firstWhere('email', $request->email);
 
         return $this->ok(
             "Authenticated",
             [
-                'token' => $user->createToken("api-token-for-$user->email")->plainTextToken,
+                'token' => $user->createToken(
+                    "api-token-for-$user->email",
+                    ["*"],
+                    now()->addMonth(),
+                )->plainTextToken,
             ]
         );
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return $this->ok('');
     }
 
     public function register()
