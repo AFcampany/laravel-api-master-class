@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Filters\V1\TicketFilter;
 use App\Http\Requests\Api\V1\StoreTicketRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
-class AuthorTicketsController extends Controller
+class AuthorTicketsController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -24,7 +25,7 @@ class AuthorTicketsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store($authorId, StoreTicketRequest $request)
+    public function store(StoreTicketRequest $request, $authorId)
     {
         $model = [
             'title' => $request->input('data.attributes.title'),
@@ -63,8 +64,19 @@ class AuthorTicketsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($authorId, $ticketId)
     {
-        //
+        try {
+            $ticket = Ticket::findOrFail($ticketId);
+
+            if ($ticket->user_id == $authorId) {
+                $ticket->delete();
+                return $this->ok('Ticket successfuly deleted');
+            }
+            return $this->error('Ticket can not be found ', 404);
+
+        } catch (ModelNotFoundException $exception) {
+            return $this->error('Ticket can not be found', 404);
+        }
     }
 }

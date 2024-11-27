@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\AuthorController;
-use App\Http\Controllers\AuthorTicketsController;
+use App\Http\Controllers\Api\V1\AuthorTicketsController;
 use Illuminate\Support\Facades\Route;
 
 
