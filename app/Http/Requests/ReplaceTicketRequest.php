@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\V1;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateTicketRequest extends FormRequest
+class ReplaceTicketRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,11 +25,8 @@ class UpdateTicketRequest extends FormRequest
             'data.attributes.title' => 'required|string',
             'data.attributes.description' => 'required|string',
             'data.attributes.status' => 'required|string|in:A,C,H,X',
+            'data.relationships.author.data.id' => 'required|integer',
         ];
-
-        if ($this->routeIs('tickets.store')) {
-            $rules['data.relationships.author.data.id'] = 'required|integer';
-        }
 
         return $rules;
     }
