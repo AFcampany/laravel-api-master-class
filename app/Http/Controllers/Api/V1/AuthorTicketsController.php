@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Filters\V1\TicketFilter;
 use App\Http\Requests\Api\V1\StoreTicketRequest;
-use App\Http\Requests\ReplaceTicketRequest;
+use App\Http\Requests\Api\V1\ReplaceTicketRequest;
+use App\Http\Requests\Api\V1\UpdateTicketRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
-use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
@@ -29,14 +29,10 @@ class AuthorTicketsController extends ApiController
      */
     public function store(StoreTicketRequest $request, $authorId)
     {
-        $model = [
-            'title' => $request->input('data.attributes.title'),
-            'description' => $request->input('data.attributes.description'),
-            'status' => $request->input('data.attributes.status'),
-            'user_id' => $authorId,
-        ];
+        $data = $request->mappedAttributes();
+        $data['user_id'] = $authorId;
 
-        return new TicketResource(Ticket::create($model));
+        return new TicketResource(Ticket::create($data));
     }
 
     /**
@@ -47,12 +43,20 @@ class AuthorTicketsController extends ApiController
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateTicketRequest $request, $authorId, $ticketId)
     {
-        //
+        // use PATCH method mean update one or to columns in database
+        try {
+            $ticket = Ticket::findOrFail($ticketId);
+
+            if ($ticket->user_id == $authorId) {
+                $ticket->update($request->mappedAttributes());
+
+                return new TicketResource($ticket);
+            }
+        } catch (ModelNotFoundException $exception) {
+            return $this->error('Ticket can not be found', 404);
+        }
     }
 
     public function replace(ReplaceTicketRequest $request, $authorId, $ticketId) {
@@ -61,13 +65,7 @@ class AuthorTicketsController extends ApiController
             $ticket = Ticket::findOrFail($ticketId);
 
             if ($ticket->user_id == $authorId) {
-                $model = [
-                    'title' => $request->input('data.attributes.title'),
-                    'description' => $request->input('data.attributes.description'),
-                    'status' => $request->input('data.attributes.status'),
-                    'user_id' => $request->input('data.relationships.author.data.id'),
-                ];
-                $ticket->update($model);
+                $ticket->update($request->mappedAttributes());
 
                 return new TicketResource($ticket);
             }

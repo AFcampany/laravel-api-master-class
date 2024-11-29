@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponses;
 use Illuminate\Http\Request;
 
+/**
+ * @property Request $request
+ */
 class ApiController extends Controller
 {
     use ApiResponses;
