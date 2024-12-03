@@ -50,7 +50,6 @@ class TicketController extends ApiController
 
     public function update(UpdateTicketRequest $request, $ticketId)
     {
-        // use PATCH method mean update one or to columns in database
         try {
             $ticket = Ticket::findOrFail($ticketId);
 
@@ -68,7 +67,6 @@ class TicketController extends ApiController
 
     public function replace(ReplaceTicketRequest $request, $ticketId)
     {
-        // use PUT method mean replace all columns in database
         try {
             $ticket = Ticket::findOrFail($ticketId);
 
@@ -79,6 +77,8 @@ class TicketController extends ApiController
             return new TicketResource($ticket);
         } catch (ModelNotFoundException $exception) {
             return $this->error('Ticket can not be found', 404);
+        } catch (AuthorizationException $exception) {
+            return $this->error('You are not authorized to update this resource', 401);
         }
     }
 

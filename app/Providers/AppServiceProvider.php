@@ -2,9 +2,8 @@
 
 namespace App\Providers;
 
-use App\Http\Controllers\Api\V1\ApiController;
 use App\Models\Ticket;
-use App\Policies\V1\TicketPolicy;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::guessPolicyNamesUsing(function (string $modelClass) {
             // this is not handel versioning !!
             $policies =  [
-                Ticket::class => TicketPolicy::class
+                Ticket::class => \App\Policies\V1\TicketPolicy::class,
+                User::class => \App\Policies\V1\UserPolicy::class,
             ];
 
             return $policies[$modelClass];
