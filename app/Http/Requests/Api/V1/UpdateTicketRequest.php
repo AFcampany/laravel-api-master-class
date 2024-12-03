@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Permissions\V1\Abilities;
+
 class UpdateTicketRequest extends BaseTicketRequest
 {
     public function authorize(): bool
@@ -17,6 +19,10 @@ class UpdateTicketRequest extends BaseTicketRequest
             'data.attributes.status' => 'sometimes|string|in:A,C,H,X',
             'data.relationships.author.data.id' => 'sometimes|integer',
         ];
+
+        if ($this->user()->tokenCan(Abilities::UpdateOwnTicket)) {
+            $rules['data.relationships.author.data.id'] = 'prohibited';
+        }
 
         return $rules;
     }
