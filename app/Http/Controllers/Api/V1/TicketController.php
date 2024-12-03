@@ -8,7 +8,6 @@ use App\Http\Requests\Api\V1\StoreTicketRequest;
 use App\Http\Requests\Api\V1\UpdateTicketRequest;
 use App\Http\Requests\Api\V1\ReplaceTicketRequest;
 use App\Http\Resources\V1\TicketResource;
-use App\Models\User;
 use App\Policies\V1\TicketPolicy;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -30,7 +29,7 @@ class TicketController extends ApiController
 
             return new TicketResource(Ticket::create($request->mappedAttributes()));
         } catch (AuthorizationException $exception) {
-            return $this->error('You are not authorized to update this resource', 401);
+            return $this->error('You are not authorized to create this resource', 401);
         }
     }
 

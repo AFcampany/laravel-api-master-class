@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\ReplaceTicketRequest;
 use App\Http\Requests\Api\V1\UpdateTicketRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AuthorTicketsController extends ApiController
@@ -28,10 +29,13 @@ class AuthorTicketsController extends ApiController
      */
     public function store(StoreTicketRequest $request, $authorId)
     {
-        $data = $request->mappedAttributes();
-        $data['user_id'] = $authorId;
+        try {
+            $this->isAble('store', Ticket::class); //  Policy
 
-        return new TicketResource(Ticket::create($data));
+            return new TicketResource(Ticket::create($request->mappedAttributes(['author' => 'user_id'])));
+        } catch (AuthorizationException $exception) {
+            return $this->error('You are not authorized to create this resource', 401);
+        }
     }
 
     /**
@@ -46,31 +50,37 @@ class AuthorTicketsController extends ApiController
     {
         // use PATCH method mean update one or to columns in database
         try {
-            $ticket = Ticket::findOrFail($ticketId);
+            $ticket = Ticket::where('id', $ticketId)
+                ->where('user_id', $authorId)
+                ->firstOrFail();
 
-            if ($ticket->user_id == $authorId) {
-                $ticket->update($request->mappedAttributes());
+            $this->isAble('update', $ticket);
 
-                return new TicketResource($ticket);
-            }
+            $ticket->update($request->mappedAttributes());
+            return new TicketResource($ticket);
         } catch (ModelNotFoundException $exception) {
             return $this->error('Ticket can not be found', 404);
+        } catch (AuthorizationException $exception) {
+            return $this->error('You are not authorized to create this resource', 401);
         }
     }
 
-    public function replace(ReplaceTicketRequest $request, $authorId, $ticketId) {
+    public function replace(ReplaceTicketRequest $request, $authorId, $ticketId)
+    {
         // use PUT method mean replace all columns in database
         try {
-            $ticket = Ticket::findOrFail($ticketId);
+            $ticket = Ticket::where('id', $ticketId)
+                ->where('user_id', $authorId)
+                ->firstOrFail();
 
-            if ($ticket->user_id == $authorId) {
-                $ticket->update($request->mappedAttributes());
+            $this->isAble('replace', $ticket);
 
-                return new TicketResource($ticket);
-            }
-            // TODO: ticket doesn't belong to user
+            $ticket->update($request->mappedAttributes());
+            return new TicketResource($ticket);
         } catch (ModelNotFoundException $exception) {
             return $this->error('Ticket can not be found', 404);
+        } catch (AuthorizationException $exception) {
+            return $this->error('You are not authorized to create this resource', 401);
         }
     }
 
@@ -80,16 +90,18 @@ class AuthorTicketsController extends ApiController
     public function destroy($authorId, $ticketId)
     {
         try {
-            $ticket = Ticket::findOrFail($ticketId);
+            $ticket = Ticket::where('id', $ticketId)
+                ->where('user_id', $authorId)
+                ->firstOrFail();
 
-            if ($ticket->user_id == $authorId) {
-                $ticket->delete();
-                return $this->ok('Ticket successfuly deleted');
-            }
-            return $this->error('Ticket can not be found ', 404);
+            $this->isAble('delete', $ticket);
 
+            $ticket->delete();
+            return $this->ok('Ticket successfuly deleted');
         } catch (ModelNotFoundException $exception) {
             return $this->error('Ticket can not be found', 404);
+        } catch (AuthorizationException $exception) {
+            return $this->error('You are not authorized to create this resource', 401);
         }
     }
 }
