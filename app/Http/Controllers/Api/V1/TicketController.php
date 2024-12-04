@@ -24,79 +24,52 @@ class TicketController extends ApiController
 
     public function store(StoreTicketRequest $request)
     {
-        try {
-            $this->isAble('store', Ticket::class); //  Policy
-
+        if ($this->isAble('store', Ticket::class)) {
             return new TicketResource(Ticket::create($request->mappedAttributes()));
-        } catch (AuthorizationException $exception) {
-            return $this->error('You are not authorized to create this resource', 401);
         }
+        return $this->notAuthorized('You are not authorized to create this resource');
     }
 
-    public function show($ticketId)
+    public function show(Ticket $ticket)
     {
-        try {
-            $ticket = Ticket::findOrFail($ticketId);
-
-            if ($this->include('user')) {
-                return new TicketResource($ticket->load('user'));
-            }
-
-            return new TicketResource($ticket);
-        } catch (ModelNotFoundException $exception) {
-            return $this->error('Ticket can not be found', 404);
+        if ($this->include('user')) {
+            return new TicketResource($ticket->load('user'));
         }
+
+        return new TicketResource($ticket);
     }
 
-    public function update(UpdateTicketRequest $request, $ticketId)
+    public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
-        try {
-            $ticket = Ticket::findOrFail($ticketId);
-
-            $this->isAble('update', $ticket); //  Policy
-
+        if ($this->isAble('update', $ticket)) {
             $ticket->update($request->mappedAttributes());
-
             return new TicketResource($ticket);
-        } catch (ModelNotFoundException $exception) {
-            return $this->error('Ticket can not be found', 404);
-        } catch (AuthorizationException $exception) {
-            return $this->error('You are not authorized to update this resource', 401);
         }
+
+        return $this->notAuthorized('You are not authorized to update this resource');
     }
 
-    public function replace(ReplaceTicketRequest $request, $ticketId)
+    public function replace(ReplaceTicketRequest $request, Ticket $ticket)
     {
-        try {
-            $ticket = Ticket::findOrFail($ticketId);
-
-            $this->isAble('replace', $ticket); //  Policy
-
+        if ($this->isAble('replace', $ticket)) {
             $ticket->update($request->mappedAttributes());
-
             return new TicketResource($ticket);
-        } catch (ModelNotFoundException $exception) {
-            return $this->error('Ticket can not be found', 404);
-        } catch (AuthorizationException $exception) {
-            return $this->error('You are not authorized to update this resource', 401);
         }
+
+        return $this->notAuthorized('You are not authorized to update this resource');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($ticketId)
+    public function destroy(Ticket $ticket)
     {
-        try {
-            $ticket = Ticket::findOrFail($ticketId);
-
-            $this->isAble('delete', $ticket); //  Policy
-
+        if ($this->isAble('store', $ticket)) {
             $ticket->delete();
 
             return $this->ok('Ticket successfuly deleted');
-        } catch (ModelNotFoundException $exception) {
-            return $this->error('Ticket can not be found', 404);
         }
+
+        return $this->notAuthorized('You are not authorized to delet this resource');
     }
 }
